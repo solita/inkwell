@@ -1,6 +1,7 @@
 (ns inkwell.core-test
   (:require [midje.sweet :refer :all]
-            [inkwell.core :refer :all]))
+            [inkwell.core :refer :all])
+  (:import java.io.StringWriter))
 
 (fact "A new sketch starts out running"
   (with-open [s (sketch {})]
@@ -20,3 +21,14 @@
         (let [draw-count-before-sleep @draw-count]
           (Thread/sleep 100)
           (= @draw-count draw-count-before-sleep) => true)))))
+
+(facts "If the draw function throws an exception"
+  (with-out-str
+    (with-open [s (sketch {:draw #(throw (Exception.))})]
+      (Thread/sleep 100)
+
+      (fact "the sketch is stopped"
+        @(:running? s) => false)
+
+      (fact "the exception stacktrace is printed"
+        (str *out*) => #"java.lang.Exception"))))

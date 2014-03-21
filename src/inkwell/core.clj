@@ -1,6 +1,8 @@
 (ns inkwell.core
   (:require [clojure.core.typed :as t]
-            [quil.core :as q]))
+            [quil.core :as q])
+  (:import (java.io StringWriter
+                    PrintWriter)))
 
 (t/def-alias QuilSketch quil.Applet)
 
@@ -23,14 +25,28 @@
 
 (t/def-alias Settings (HMap :mandatory {:draw [-> Any]}))
 
+(t/non-nil-return java.io.StringWriter/toString :all)
+
+(t/ann throwable->string [Throwable -> String])
+(defn throwable->string [^Throwable t]
+  (let [string-writer (StringWriter.)]
+    (.printStackTrace t (PrintWriter. string-writer))
+    (.toString string-writer)))
+
 (t/ann sketch [Settings -> InkwellSketch])
 (defn sketch [settings]
-  (let [running? (t/atom> Boolean true)]
+  (let [running? (t/atom> Boolean true)
+        main-thread-out *out*]
     (t/letfn> [draw :- [-> Any]
-      (draw []
-        (when @running?
-          (when-let [user-draw (:draw settings)]
-            (user-draw))))]
+               (draw []
+                 (when @running?
+                   (try
+                     (when-let [user-draw (:draw settings)]
+                       (user-draw))
+                     (catch Throwable t
+                       (binding [*out* main-thread-out]
+                         (println (throwable->string t)))
+                       (reset! running? false)))))]
       (map->InkwellSketch {:quil-sketch (q/sketch
                                           :draw draw)
                            :state (agent (state> {}))
