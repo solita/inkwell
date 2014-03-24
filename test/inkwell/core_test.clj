@@ -4,12 +4,12 @@
   (:import java.io.StringWriter))
 
 (fact "A new sketch starts out running"
-  (with-open [s (sketch {})]
+  (with-open [s (make-sketch! {})]
     @(:running? s) => true))
 
 (facts "The draw function"
   (let [draw-count (atom 0)]
-    (with-open [s (sketch {:draw #(swap! draw-count inc)})]
+    (with-open [s (make-sketch! {:draw #(swap! draw-count inc)})]
 
       (fact "is called while the sketch is running"
         (let [draw-count-before-sleep @draw-count]
@@ -24,7 +24,7 @@
 
 (facts "If the draw function throws an exception"
   (with-out-str
-    (with-open [s (sketch {:draw #(throw (Exception.))})]
+    (with-open [s (make-sketch! {:draw #(throw (Exception.))})]
       (Thread/sleep 100)
 
       (fact "the sketch is stopped"

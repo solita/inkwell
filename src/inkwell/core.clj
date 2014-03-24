@@ -33,8 +33,8 @@
     (.printStackTrace t (PrintWriter. string-writer))
     (.toString string-writer)))
 
-(t/ann sketch [Settings -> InkwellSketch])
-(defn sketch [settings]
+(t/ann make-sketch! [Settings -> InkwellSketch])
+(defn make-sketch! [settings]
   (let [running? (t/atom> Boolean true)
         main-thread-out *out*]
     (t/letfn> [draw :- [-> Any]
@@ -54,7 +54,5 @@
 
 (t/ann stop! (All [[x :< InkwellSketch]] [x -> x]))
 (defn stop! [sketch]
-  (reset! (:running? (t/ann-form sketch InkwellSketch)) false)
+  (reset! (:running? sketch) false)
   sketch)
-
-
