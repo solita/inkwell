@@ -20,7 +20,8 @@
 
 (t/def-alias Settings (TFn [[State :variance :invariant]]
                         (HMap :mandatory {:draw [State -> Any]
-                                          :initial-state State})))
+                                          :initial-state State}
+                              :optional {:title String})))
 
 (t/non-nil-return java.io.StringWriter/toString :all)
 
@@ -47,6 +48,7 @@
                          (println (throwable->string t))
                          (reset! running? false))))))]
       (map->InkwellSketch {:quil-sketch (q/sketch
+                                          :title (:title settings)
                                           :draw draw)
                            :state state
                            :running? running?}))))
