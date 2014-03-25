@@ -39,13 +39,13 @@
     (t/letfn> [draw :- [-> Any]
                (draw []
                  (when @running?
-                   (try
-                     (when-let [user-draw (:draw settings)]
-                       (user-draw @state))
-                     (catch Throwable t
-                       (binding [*out* main-thread-out]
-                         (println (throwable->string t)))
-                       (reset! running? false)))))]
+                   (binding [*out* main-thread-out]
+                     (try
+                       (when-let [user-draw (:draw settings)]
+                         (user-draw @state))
+                       (catch Throwable t
+                         (println (throwable->string t))
+                         (reset! running? false))))))]
       (map->InkwellSketch {:quil-sketch (q/sketch
                                           :draw draw)
                            :state state
