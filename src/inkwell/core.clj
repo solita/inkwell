@@ -56,3 +56,9 @@
 (defn stop! [sketch]
   (reset! (:running? sketch) false)
   sketch)
+
+(t/ann start! (All [State [x :< (InkwellSketch State)]]
+                [x -> x]))
+(defn start! [sketch]
+  (reset! (:running? sketch) true)
+  sketch)
