@@ -49,7 +49,8 @@
                          (reset! running? false))))))]
       (map->InkwellSketch {:quil-sketch (q/sketch
                                           :title (:title settings)
-                                          :draw draw)
+                                          :draw draw
+                                          :target :perm-frame)
                            :state state
                            :running? running?}))))
 
