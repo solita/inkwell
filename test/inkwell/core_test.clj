@@ -7,33 +7,38 @@
            java.awt.Robot
            java.awt.event.InputEvent))
 
-(defn becomes-like
-  ([predicate]
-    (becomes-like predicate {}))
-  ([predicate options]
-    (fn [f]
-      (let [timeout-ms (:timeout options 100)
-            wait-ms (:wait options 20)
-            start-ms (System/currentTimeMillis)
-            end-ms (+ start-ms timeout-ms)]
-        (loop []
-          (let [actual (f)]
-            (or (predicate actual)
-                (if (< (System/currentTimeMillis) end-ms)
-                  (do
-                    (Thread/sleep wait-ms)
-                    (recur))
-                  (as-data-laden-falsehood {:notes [(str "actual: " (pr-str actual))]})))))))))
+(defn wait-until
+  "Waits until `f` returns a truthy value and returns it. If a timeout is
+reached, returns `nil`."
+  [f]
+  (let [timeout-ms 100
+        wait-ms 20
+        start-ms (System/currentTimeMillis)
+        end-ms (+ start-ms timeout-ms)]
+    (loop []
+      (or (f)
+          (when (< (System/currentTimeMillis) end-ms)
+            (Thread/sleep wait-ms)
+            (recur))))))
 
-(defn becomes
-  ([expected]
-    (becomes expected {}))
-  ([expected options]
-    (becomes-like (fn [actual]
-                    (= actual (if (fn? expected)
-                                (expected)
-                                expected)))
-                  options)))
+(defn becomes-like
+  "Returns a checker that calls its input function until its return value
+satisfies `predicate` (or a timeout is reached)."
+  [predicate]
+  (fn [f]
+    (or (wait-until #(predicate (f)))
+        (as-data-laden-falsehood {:notes [(str "actual: " (pr-str (f)))]}))))
+
+(defn becomes [expected]
+  "Returns a checker that calls its input function until its return value
+is `expected` (or a timeout is reached)."
+  (let [expected (if (fn? expected)
+                   expected
+                   (constantly expected))
+        result (becomes-like #(= % (expected)))]
+    (if (data-laden-falsehood? result)
+      (update-in result [:notes] conj (str "expected: " (pr-str (expected))))
+      result)))
 
 (fact "A new sketch starts out running"
   (with-open [s (make-sketch! {})]
