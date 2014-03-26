@@ -12,9 +12,9 @@
 (t/ann ^:no-check quil.core/mouse-y [-> t/AnyInteger])
 
 (t/ann-record [State] InkwellSketch [quil-sketch :- QuilSketch
-                                     running? :- (t/Atom1 Boolean)
+                                     paused? :- (t/Atom1 Boolean)
                                      state :- (t/Atom1 State)])
-(defrecord InkwellSketch [quil-sketch running? state]
+(defrecord InkwellSketch [quil-sketch paused? state]
   java.lang.AutoCloseable
   (close [sketch]
     (q/sketch-close (:quil-sketch sketch))
@@ -45,12 +45,12 @@
 (t/ann make-sketch! (All [State]
                       [(Settings State) -> (InkwellSketch State)]))
 (defn make-sketch! [settings]
-  (let [running? (t/atom> Boolean true)
+  (let [paused? (t/atom> Boolean false)
         main-thread-out *out*
         state (atom (:initial-state settings))]
     (t/letfn> [draw :- [-> Any]
                (draw []
-                 (when @running?
+                 (when-not @paused?
                    (binding [*out* main-thread-out]
                      (try
                        (when-let [handle-event (:handle-event settings)]
@@ -59,10 +59,10 @@
                          (user-draw @state))
                        (catch Throwable t
                          (println (throwable->string t))
-                         (reset! running? false))))))
+                         (reset! paused? true))))))
                mouse-moved :- [-> Any]
                (mouse-moved []
-                 (when @running?
+                 (when-not @paused?
                    (binding [*out* main-thread-out]
                      (try
                        (when-let [handle-event (:handle-event settings)]
@@ -71,23 +71,23 @@
                                                                (quil.core/mouse-y)]}))
                        (catch Throwable t
                          (println (throwable->string t))
-                         (reset! running? false))))))]
+                         (reset! paused? true))))))]
       (map->InkwellSketch {:quil-sketch (q/sketch
                                           :title (:title settings)
                                           :draw draw
                                           :mouse-moved mouse-moved
                                           :target :perm-frame)
                            :state state
-                           :running? running?}))))
+                           :paused? paused?}))))
 
-(t/ann stop! (All [State [x :< (InkwellSketch State)]]
-               [x -> x]))
-(defn stop! [sketch]
-  (reset! (:running? sketch) false)
+(t/ann pause! (All [State [x :< (InkwellSketch State)]]
+                [x -> x]))
+(defn pause! [sketch]
+  (reset! (:paused? sketch) true)
   sketch)
 
-(t/ann start! (All [State [x :< (InkwellSketch State)]]
-                [x -> x]))
-(defn start! [sketch]
-  (reset! (:running? sketch) true)
+(t/ann resume! (All [State [x :< (InkwellSketch State)]]
+                 [x -> x]))
+(defn resume! [sketch]
+  (reset! (:paused? sketch) false)
   sketch)

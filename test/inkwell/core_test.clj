@@ -37,7 +37,7 @@
 
 (fact "A new sketch starts out running"
   (with-open [s (make-sketch! {})]
-    @(:running? s) => true))
+    @(:paused? s) => false))
 
 (facts "The draw function"
   (let [draw-count (atom 0)
@@ -48,24 +48,24 @@
                                  :initial-state {:foo 0}})]
 
       (fact "is called while the sketch is running"
-        (let [draw-count-before-sleep @draw-count]
-          #(> @draw-count draw-count-before-sleep) => (becomes true)))
+        (let [old-draw-count @draw-count]
+          #(> @draw-count old-draw-count) => (becomes true)))
 
       (fact "is given the current state value as an argument"
         (swap! (:state s) update-in [:foo] inc)
         #(deref draw-args) => (becomes [{:foo 1}]))
 
-      (fact "is not called while the sketch is stopped"
-        (stop! s)
-        (let [draw-count-before-sleep @draw-count]
-          #(= @draw-count draw-count-before-sleep) => (becomes true))))))
+      (fact "is not called while the sketch is paused"
+        (pause! s)
+        (let [old-draw-count @draw-count]
+          (= @draw-count old-draw-count) => true)))))
 
 (facts "If the draw function throws an exception"
   (with-out-str
     (with-open [s (make-sketch! {:draw (fn [_] (throw (Exception.)))})]
 
       (fact "the sketch is stopped"
-        #(deref (:running? s)) => (becomes false))
+        #(deref (:paused? s)) => (becomes true))
 
       (fact "the exception stacktrace is printed"
         (str *out*) => #"java.lang.Exception"))))
