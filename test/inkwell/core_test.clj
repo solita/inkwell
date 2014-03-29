@@ -113,5 +113,20 @@ the expected coordinates."
                               (window-coordinate= 254 (get-in event [:position 1]))))
                        actual))))
 
+        (fact "gets a :mouse-pressed event when a mouse button is pressed"
+          (reset! handle-args ())
+          (focus-frame)
+          (.mouseMove robot (+ frame-x 212) (+ frame-y 254))
+          (.mousePress robot InputEvent/BUTTON1_MASK)
+          #(deref handle-args)
+          => (becomes-like
+               (fn [actual]
+                 (some (fn [[_ event]]
+                         (and (= (:type event) :mouse-pressed)
+                              (= (:button :left))
+                              (window-coordinate= 212 (get-in event [:position 0]))
+                              (window-coordinate= 254 (get-in event [:position 1]))))
+                       actual))))
+
         (fact "its return value becomes the new state value"
           #(deref (:state s)) => (becomes #(deref handle-return-value)))))))

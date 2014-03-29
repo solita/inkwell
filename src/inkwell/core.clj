@@ -5,11 +5,13 @@
                     PrintWriter)))
 
 (t/def-alias QuilSketch quil.Applet)
+(t/def-alias MouseButton (U ':left ':center ':right))
 
 (t/ann ^:no-check quil.core/sketch [Any * -> quil.Applet])
 (t/ann ^:no-check quil.core/sketch-close [QuilSketch -> Any])
 (t/ann ^:no-check quil.core/mouse-x [-> t/AnyInteger])
 (t/ann ^:no-check quil.core/mouse-y [-> t/AnyInteger])
+(t/ann ^:no-check quil.core/mouse-button [-> MouseButton])
 
 (t/ann-record [State] InkwellSketch [quil-sketch :- QuilSketch
                                      paused? :- (t/Atom1 Boolean)
@@ -25,8 +27,10 @@
 (t/def-alias TickEvent (HMap :mandatory {:type ':tick}))
 (t/def-alias MouseMovedEvent (HMap :mandatory {:type ':mouse-moved
                                                :position Position}))
-
-(t/def-alias Event (U MouseMovedEvent TickEvent))
+(t/def-alias MousePressedEvent (HMap :mandatory {:type ':mouse-pressed
+                                                 :position Position
+                                                 :button MouseButton}))
+(t/def-alias Event (U TickEvent MouseMovedEvent MousePressedEvent))
 
 (t/def-alias Settings (TFn [[State :variance :invariant]]
                         (HMap :mandatory {:draw [State -> Any]
@@ -71,11 +75,25 @@
                                                                (quil.core/mouse-y)]}))
                        (catch Throwable t
                          (println (throwable->string t))
+                         (reset! paused? true))))))
+               mouse-pressed :- [-> Any]
+               (mouse-pressed []
+                 (when-not @paused?
+                   (binding [*out* main-thread-out]
+                     (try
+                       (when-let [handle-event (:handle-event settings)]
+                         (swap! state handle-event {:type :mouse-pressed
+                                                    :button (quil.core/mouse-button)
+                                                    :position [(quil.core/mouse-x)
+                                                               (quil.core/mouse-y)]}))
+                       (catch Throwable t
+                         (println (throwable->string t))
                          (reset! paused? true))))))]
       (map->InkwellSketch {:quil-sketch (q/sketch
                                           :title (:title settings)
                                           :draw draw
                                           :mouse-moved mouse-moved
+                                          :mouse-pressed mouse-pressed
                                           :target :perm-frame)
                            :state state
                            :paused? paused?}))))
