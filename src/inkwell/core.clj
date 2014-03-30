@@ -39,11 +39,15 @@
 (t/def-alias KeyPressedEvent (HMap :mandatory {:type ':key-pressed
                                                :key Character
                                                :key-code t/AnyInteger}))
+(t/def-alias KeyReleasedEvent (HMap :mandatory {:type ':key-released
+                                                :key Character
+                                                :key-code t/AnyInteger}))
 (t/def-alias Event (U TickEvent
                       MouseMovedEvent
                       MousePressedEvent
                       MouseReleasedEvent
-                      KeyPressedEvent))
+                      KeyPressedEvent
+                      KeyReleasedEvent))
 
 (t/def-alias Settings (TFn [[State :variance :invariant]]
                         (HMap :mandatory {:draw [State -> Any]
@@ -116,7 +120,11 @@ sketch's state with the users's `handle-event`."
                               :key-pressed (event-adapter sketch
                                              {:type :key-pressed
                                               :key (quil.core/raw-key)
-                                              :key-code (quil.core/key-code)})})]
+                                              :key-code (quil.core/key-code)})
+                              :key-released (event-adapter sketch
+                                              {:type :key-released
+                                               :key (quil.core/raw-key)
+                                               :key-code (quil.core/key-code)})})]
     (tu/ignore-with-unchecked-cast
       (map->InkwellSketch (-> sketch
                            (select-keys [:paused? :state])

@@ -157,5 +157,19 @@ the expected coordinates."
                        actual)))
           (.keyRelease robot KeyEvent/VK_C))
 
+        (fact "gets a :key-released event when a key is released on the keyboard"
+          (reset! handle-args ())
+          (focus-frame)
+          (.keyPress robot KeyEvent/VK_C)
+          (.keyRelease robot KeyEvent/VK_C)
+          #(deref handle-args)
+          => (becomes-like
+               (fn [actual]
+                 (some (fn [[_ event]]
+                         (and (= (:type event) :key-released)
+                              (= (:key event) \c)
+                              (= (:key-code event) KeyEvent/VK_C)))
+                       actual))))
+
         (fact "its return value becomes the new state value"
           #(deref (:state s)) => (becomes #(deref handle-return-value)))))))
