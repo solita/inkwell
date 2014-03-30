@@ -36,8 +36,7 @@
 (t/def-alias Settings (TFn [[State :variance :invariant]]
                         (HMap :mandatory {:draw [State -> Any]
                                           :handle-event [State Event -> State]
-                                          :initial-state State}
-                              :optional {:title String})))
+                                          :initial-state State})))
 
 (t/non-nil-return java.io.StringWriter/toString :all)
 
