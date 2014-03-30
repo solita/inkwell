@@ -63,9 +63,9 @@ sketch's state with the users's `handle-event`."
     (when-not @(:paused? sketch)
       (binding [*out* (:main-thread-out sketch)]
         (try
-          (let [event (f)]
-            (when-let [handle-event (-> sketch :settings :handle-event)]
-              (swap! (:state sketch) handle-event event)))
+          (let [event (f)
+                handle-event (-> sketch :settings :handle-event)]
+            (swap! (:state sketch) handle-event event))
           (catch Throwable t
             (println (throwable->string t))
             (reset! (:paused? sketch) true)))))))
@@ -76,13 +76,15 @@ sketch's state with the users's `handle-event`."
 (t/ann make-sketch! (All [State]
                       [(Settings State) -> (InkwellSketch State)]))
 (defn make-sketch! [settings]
-  (let [sketch {:paused? (t/atom> Boolean false)
+  (let [settings (merge {:draw (constantly nil)
+                         :handle-event (fn [state _] state)}
+                        settings)
+        sketch {:paused? (t/atom> Boolean false)
                 :main-thread-out *out*
                 :state (atom (:initial-state settings))
                 :settings settings}
         draw (event-adapter sketch
-               (when-let [user-draw (:draw settings)]
-                 (user-draw @(:state sketch)))
+               ((:draw settings) @(:state sketch))
                {:type :tick})
         mouse-moved (event-adapter sketch
                       {:type :mouse-moved
