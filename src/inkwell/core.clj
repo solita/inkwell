@@ -1,5 +1,6 @@
 (ns inkwell.core
   (:require [clojure.core.typed :as t]
+            [clojure.core.typed.unsafe :as tu]
             [quil.core :as q])
   (:import (java.io StringWriter
                     PrintWriter)))
@@ -46,57 +47,62 @@
     (.printStackTrace t (PrintWriter. string-writer))
     (.toString string-writer)))
 
+(t/def-alias InkwellSketchMap (TFn [[State :variance :invariant]]
+                                (HMap :mandatory {:paused? (t/Atom1 Boolean)
+                                                  :main-thread-out java.io.Writer
+                                                  :state (t/Atom1 State)
+                                                  :settings (Settings State)})))
+
+(t/ann event-adapter* (All [State]
+                        [(InkwellSketchMap State) [-> Event] -> [-> Any]]))
+(defn event-adapter*
+  "Takes a fn that creates an Inkwell event, and returns a fn updates the
+sketch's state with the users's `handle-event`."
+  [sketch f]
+  (fn []
+    (when-not @(:paused? sketch)
+      (binding [*out* (:main-thread-out sketch)]
+        (try
+          (let [event (f)]
+            (when-let [handle-event (-> sketch :settings :handle-event)]
+              (swap! (:state sketch) handle-event event)))
+          (catch Throwable t
+            (println (throwable->string t))
+            (reset! (:paused? sketch) true)))))))
+
+(defmacro event-adapter [sketch & body]
+  `(event-adapter* ~sketch (fn [] ~@body)))
+
 (t/ann make-sketch! (All [State]
                       [(Settings State) -> (InkwellSketch State)]))
 (defn make-sketch! [settings]
-  (let [paused? (t/atom> Boolean false)
-        main-thread-out *out*
-        state (atom (:initial-state settings))]
-    (t/letfn> [draw :- [-> Any]
-               (draw []
-                 (when-not @paused?
-                   (binding [*out* main-thread-out]
-                     (try
-                       (when-let [handle-event (:handle-event settings)]
-                         (swap! state handle-event {:type :tick}))
-                       (when-let [user-draw (:draw settings)]
-                         (user-draw @state))
-                       (catch Throwable t
-                         (println (throwable->string t))
-                         (reset! paused? true))))))
-               mouse-moved :- [-> Any]
-               (mouse-moved []
-                 (when-not @paused?
-                   (binding [*out* main-thread-out]
-                     (try
-                       (when-let [handle-event (:handle-event settings)]
-                         (swap! state handle-event {:type :mouse-moved
-                                                    :position [(quil.core/mouse-x)
-                                                               (quil.core/mouse-y)]}))
-                       (catch Throwable t
-                         (println (throwable->string t))
-                         (reset! paused? true))))))
-               mouse-pressed :- [-> Any]
-               (mouse-pressed []
-                 (when-not @paused?
-                   (binding [*out* main-thread-out]
-                     (try
-                       (when-let [handle-event (:handle-event settings)]
-                         (swap! state handle-event {:type :mouse-pressed
-                                                    :button (quil.core/mouse-button)
-                                                    :position [(quil.core/mouse-x)
-                                                               (quil.core/mouse-y)]}))
-                       (catch Throwable t
-                         (println (throwable->string t))
-                         (reset! paused? true))))))]
-      (map->InkwellSketch {:quil-sketch (q/sketch
-                                          :title (:title settings)
-                                          :draw draw
-                                          :mouse-moved mouse-moved
-                                          :mouse-pressed mouse-pressed
-                                          :target :perm-frame)
-                           :state state
-                           :paused? paused?}))))
+  (let [sketch {:paused? (t/atom> Boolean false)
+                :main-thread-out *out*
+                :state (atom (:initial-state settings))
+                :settings settings}
+        draw (event-adapter sketch
+               (when-let [user-draw (:draw settings)]
+                 (user-draw @(:state sketch)))
+               {:type :tick})
+        mouse-moved (event-adapter sketch
+                      {:type :mouse-moved
+                       :position [(quil.core/mouse-x)
+                                  (quil.core/mouse-y)]})
+        mouse-pressed (event-adapter sketch
+                        {:type :mouse-pressed
+                         :button (quil.core/mouse-button)
+                         :position [(quil.core/mouse-x)
+                                    (quil.core/mouse-y)]})]
+    (tu/ignore-with-unchecked-cast
+      (map->InkwellSketch (-> sketch
+                           (select-keys [:paused? :state])
+                           (assoc :quil-sketch (q/sketch
+                                                 :title (:title settings)
+                                                 :draw draw
+                                                 :mouse-moved mouse-moved
+                                                 :mouse-pressed mouse-pressed
+                                                 :target :perm-frame))))
+      (InkwellSketch State))))
 
 (t/ann pause! (All [State [x :< (InkwellSketch State)]]
                 [x -> x]))
@@ -107,5 +113,6 @@
 (t/ann resume! (All [State [x :< (InkwellSketch State)]]
                  [x -> x]))
 (defn resume! [sketch]
+  (reset! (:paused? sketch) false)
   (reset! (:paused? sketch) false)
   sketch)
