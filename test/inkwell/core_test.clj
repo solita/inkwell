@@ -5,7 +5,8 @@
             [inkwell.core :refer :all])
   (:import java.io.StringWriter
            java.awt.Robot
-           java.awt.event.InputEvent))
+           (java.awt.event InputEvent
+                           KeyEvent)))
 
 (defn wait-until
   "Waits until `f` returns a truthy value and returns it. If a timeout is
@@ -141,6 +142,20 @@ the expected coordinates."
                               (window-coordinate= 212 (get-in event [:position 0]))
                               (window-coordinate= 254 (get-in event [:position 1]))))
                        actual))))
+
+        (fact "gets a :key-pressed event when a key is pressed on the keyboard"
+          (reset! handle-args ())
+          (focus-frame)
+          (.keyPress robot KeyEvent/VK_C)
+          #(deref handle-args)
+          => (becomes-like
+               (fn [actual]
+                 (some (fn [[_ event]]
+                         (and (= (:type event) :key-pressed)
+                              (= (:key event) \c)
+                              (= (:key-code event) KeyEvent/VK_C)))
+                       actual)))
+          (.keyRelease robot KeyEvent/VK_C))
 
         (fact "its return value becomes the new state value"
           #(deref (:state s)) => (becomes #(deref handle-return-value)))))))

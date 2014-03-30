@@ -13,6 +13,8 @@
 (t/ann ^:no-check quil.core/mouse-x [-> t/AnyInteger])
 (t/ann ^:no-check quil.core/mouse-y [-> t/AnyInteger])
 (t/ann ^:no-check quil.core/mouse-button [-> MouseButton])
+(t/ann ^:no-check quil.core/raw-key [-> Character])
+(t/ann ^:no-check quil.core/key-code [-> t/AnyInteger])
 
 (t/ann-record [State] InkwellSketch [quil-sketch :- QuilSketch
                                      paused? :- (t/Atom1 Boolean)
@@ -31,7 +33,17 @@
 (t/def-alias MousePressedEvent (HMap :mandatory {:type ':mouse-pressed
                                                  :position Position
                                                  :button MouseButton}))
-(t/def-alias Event (U TickEvent MouseMovedEvent MousePressedEvent))
+(t/def-alias MouseReleasedEvent (HMap :mandatory {:type ':mouse-released
+                                                  :position Position
+                                                  :button MouseButton}))
+(t/def-alias KeyPressedEvent (HMap :mandatory {:type ':key-pressed
+                                               :key Character
+                                               :key-code t/AnyInteger}))
+(t/def-alias Event (U TickEvent
+                      MouseMovedEvent
+                      MousePressedEvent
+                      MouseReleasedEvent
+                      KeyPressedEvent))
 
 (t/def-alias Settings (TFn [[State :variance :invariant]]
                         (HMap :mandatory {:draw [State -> Any]
@@ -100,7 +112,11 @@ sketch's state with the users's `handle-event`."
                                                 {:type :mouse-released
                                                  :button (quil.core/mouse-button)
                                                  :position [(quil.core/mouse-x)
-                                                            (quil.core/mouse-y)]})})]
+                                                            (quil.core/mouse-y)]})
+                              :key-pressed (event-adapter sketch
+                                             {:type :key-pressed
+                                              :key (quil.core/raw-key)
+                                              :key-code (quil.core/key-code)})})]
     (tu/ignore-with-unchecked-cast
       (map->InkwellSketch (-> sketch
                            (select-keys [:paused? :state])

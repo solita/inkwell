@@ -49,8 +49,7 @@ The rest of the keys, such as `:title` or `:size`, are passed on to Quil.
 
 The event parameter of `handle-event` may take one of the following values:
 
-    ;; Sent after each `draw`
-    {:type :tick}
+    {:type :tick} ; Sent after each `draw`
 
     {:type :mouse-moved
      :position [(quil.core/mouse-x)
@@ -65,6 +64,10 @@ The event parameter of `handle-event` may take one of the following values:
      :button (quil.core/mouse-button)
      :position [(quil.core/mouse-x)
                 (quil.core/mouse-y)]}
+
+    {:type :key-pressed
+     :key (quil.core/raw-key)
+     :key-code (quil.core/key-code)}
 
 As you can see, apart from `:tick`, the event types correspond to Quil's event
 type callbacks, and their values come from Quil's state lookup functions.
