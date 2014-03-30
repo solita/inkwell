@@ -92,16 +92,17 @@ sketch's state with the users's `handle-event`."
                         {:type :mouse-pressed
                          :button (quil.core/mouse-button)
                          :position [(quil.core/mouse-x)
-                                    (quil.core/mouse-y)]})]
+                                    (quil.core/mouse-y)]})
+        quil-settings (merge {:target :perm-frame}
+                             settings
+                             {:draw draw
+                              :mouse-moved mouse-moved
+                              :mouse-pressed mouse-pressed})]
     (tu/ignore-with-unchecked-cast
       (map->InkwellSketch (-> sketch
                            (select-keys [:paused? :state])
-                           (assoc :quil-sketch (q/sketch
-                                                 :title (:title settings)
-                                                 :draw draw
-                                                 :mouse-moved mouse-moved
-                                                 :mouse-pressed mouse-pressed
-                                                 :target :perm-frame))))
+                           (assoc :quil-sketch
+                                  (apply q/sketch (apply concat quil-settings)))))
       (InkwellSketch State))))
 
 (t/ann pause! (All [State [x :< (InkwellSketch State)]]
