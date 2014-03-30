@@ -1,4 +1,4 @@
-(defproject inkwell "0.1.0"
+(defproject inkwell "0.2.0-SNAPSHOT"
   :description "Improved interactive and functional programming for Quil"
   :url "https://github.com/solita/inkwell"
   :license {:name "Eclipse Public License"
