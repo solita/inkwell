@@ -67,11 +67,13 @@ The event parameter of `handle-event` may take one of the following values:
 
     {:type :key-pressed
      :key (quil.core/raw-key)
-     :key-code (quil.core/key-code)}
+     :key-code (quil.core/key-code)
+     :key-name (quil.core/key-as-keyword)}
 
     {:type :key-released
      :key (quil.core/raw-key)
-     :key-code (quil.core/key-code)}
+     :key-code (quil.core/key-code)
+     :key-name (quil.core/key-as-keyword)}
 
 As you can see, apart from `:tick`, the event types correspond to Quil's event
 type callbacks, and their values come from Quil's state lookup functions.

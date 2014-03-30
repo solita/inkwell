@@ -15,6 +15,7 @@
 (t/ann ^:no-check quil.core/mouse-button [-> MouseButton])
 (t/ann ^:no-check quil.core/raw-key [-> Character])
 (t/ann ^:no-check quil.core/key-code [-> t/AnyInteger])
+(t/ann ^:no-check quil.core/key-as-keyword [-> t/Keyword])
 
 (t/ann-record [State] InkwellSketch [quil-sketch :- QuilSketch
                                      paused? :- (t/Atom1 Boolean)
@@ -38,10 +39,12 @@
                                                   :button MouseButton}))
 (t/def-alias KeyPressedEvent (HMap :mandatory {:type ':key-pressed
                                                :key Character
-                                               :key-code t/AnyInteger}))
+                                               :key-code t/AnyInteger
+                                               :key-name t/Keyword}))
 (t/def-alias KeyReleasedEvent (HMap :mandatory {:type ':key-released
                                                 :key Character
-                                                :key-code t/AnyInteger}))
+                                                :key-code t/AnyInteger
+                                                :key-name t/Keyword}))
 (t/def-alias Event (U TickEvent
                       MouseMovedEvent
                       MousePressedEvent
@@ -120,11 +123,13 @@ sketch's state with the users's `handle-event`."
                               :key-pressed (event-adapter sketch
                                              {:type :key-pressed
                                               :key (quil.core/raw-key)
-                                              :key-code (quil.core/key-code)})
+                                              :key-code (quil.core/key-code)
+                                              :key-name (quil.core/key-as-keyword)})
                               :key-released (event-adapter sketch
                                               {:type :key-released
                                                :key (quil.core/raw-key)
-                                               :key-code (quil.core/key-code)})})]
+                                               :key-code (quil.core/key-code)
+                                               :key-name (quil.core/key-as-keyword)})})]
     (tu/ignore-with-unchecked-cast
       (map->InkwellSketch (-> sketch
                            (select-keys [:paused? :state])

@@ -149,7 +149,8 @@ the expected coordinates."
           => (receives-event-like
                #(and (= (:type %) :key-pressed)
                      (= (:key %) \c)
-                     (= (:key-code %) KeyEvent/VK_C)))
+                     (= (:key-code %) KeyEvent/VK_C)
+                     (= (:key-name %) :c)))
           (.keyRelease robot KeyEvent/VK_C))
 
         (fact "gets a :key-released event when a key is released on the keyboard"
@@ -161,7 +162,8 @@ the expected coordinates."
           => (receives-event-like
                #(and (= (:type %) :key-released)
                      (= (:key %) \c)
-                     (= (:key-code %) KeyEvent/VK_C))))
+                     (= (:key-code %) KeyEvent/VK_C)
+                     (= (:key-name %) :c))))
 
         (fact "its return value becomes the new state value"
           #(deref (:state s)) => (becomes #(deref handle-return-value)))))))
