@@ -1,7 +1,7 @@
 (ns inkwell.core
   (:require [clojure.core.typed :as t]
             [clojure.core.typed.unsafe :as tu]
-            [quil.core :as q])
+            quil.core)
   (:import (java.io StringWriter
                     PrintWriter)))
 
@@ -20,7 +20,7 @@
 (defrecord InkwellSketch [quil-sketch paused? state]
   java.lang.AutoCloseable
   (close [sketch]
-    (q/sketch-close (:quil-sketch sketch))
+    (quil.core/sketch-close (:quil-sketch sketch))
     nil))
 
 (t/def-alias Position (Vector* t/AnyInteger t/AnyInteger))
@@ -104,7 +104,7 @@ sketch's state with the users's `handle-event`."
       (map->InkwellSketch (-> sketch
                            (select-keys [:paused? :state])
                            (assoc :quil-sketch
-                                  (apply q/sketch (apply concat quil-settings)))))
+                                  (apply quil.core/sketch (apply concat quil-settings)))))
       (InkwellSketch State))))
 
 (t/ann pause! (All [State [x :< (InkwellSketch State)]]
