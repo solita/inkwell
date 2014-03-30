@@ -115,7 +115,6 @@ the expected coordinates."
 
         (fact "gets a :mouse-pressed event when a mouse button is pressed"
           (reset! handle-args ())
-          (focus-frame)
           (.mouseMove robot (+ frame-x 212) (+ frame-y 254))
           (.mousePress robot InputEvent/BUTTON1_MASK)
           #(deref handle-args)
@@ -124,6 +123,21 @@ the expected coordinates."
                  (some (fn [[_ event]]
                          (and (= (:type event) :mouse-pressed)
                               (= (:button :left))
+                              (window-coordinate= 212 (get-in event [:position 0]))
+                              (window-coordinate= 254 (get-in event [:position 1]))))
+                       actual))))
+
+        (fact "gets a :mouse-released event when a mouse button is released"
+          (reset! handle-args ())
+          (.mouseMove robot (+ frame-x 212) (+ frame-y 254))
+          (.mousePress robot InputEvent/BUTTON3_MASK)
+          (.mouseRelease robot InputEvent/BUTTON3_MASK)
+          #(deref handle-args)
+          => (becomes-like
+               (fn [actual]
+                 (some (fn [[_ event]]
+                         (and (= (:type event) :mouse-released)
+                              (= (:button :right))
                               (window-coordinate= 212 (get-in event [:position 0]))
                               (window-coordinate= 254 (get-in event [:position 1]))))
                        actual))))

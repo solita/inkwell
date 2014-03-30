@@ -82,23 +82,25 @@ sketch's state with the users's `handle-event`."
                 :main-thread-out *out*
                 :state (atom (:initial-state settings))
                 :settings settings}
-        draw (event-adapter sketch
-               ((:draw settings) @(:state sketch))
-               {:type :tick})
-        mouse-moved (event-adapter sketch
-                      {:type :mouse-moved
-                       :position [(quil.core/mouse-x)
-                                  (quil.core/mouse-y)]})
-        mouse-pressed (event-adapter sketch
-                        {:type :mouse-pressed
-                         :button (quil.core/mouse-button)
-                         :position [(quil.core/mouse-x)
-                                    (quil.core/mouse-y)]})
         quil-settings (merge {:target :perm-frame}
                              settings
-                             {:draw draw
-                              :mouse-moved mouse-moved
-                              :mouse-pressed mouse-pressed})]
+                             {:draw (event-adapter sketch
+                                      ((:draw settings) @(:state sketch))
+                                      {:type :tick})
+                              :mouse-moved (event-adapter sketch
+                                             {:type :mouse-moved
+                                              :position [(quil.core/mouse-x)
+                                                         (quil.core/mouse-y)]})
+                              :mouse-pressed (event-adapter sketch
+                                               {:type :mouse-pressed
+                                                :button (quil.core/mouse-button)
+                                                :position [(quil.core/mouse-x)
+                                                           (quil.core/mouse-y)]})
+                              :mouse-released (event-adapter sketch
+                                                {:type :mouse-released
+                                                 :button (quil.core/mouse-button)
+                                                 :position [(quil.core/mouse-x)
+                                                            (quil.core/mouse-y)]})})]
     (tu/ignore-with-unchecked-cast
       (map->InkwellSketch (-> sketch
                            (select-keys [:paused? :state])
