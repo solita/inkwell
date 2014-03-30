@@ -141,6 +141,15 @@ the expected coordinates."
                      (window-coordinate= 212 (get-in % [:position 0]))
                      (window-coordinate= 254 (get-in % [:position 1])))))
 
+        (fact "gets a :mouse-wheel event when the mouse wheel is rotated"
+          (reset! handle-args ())
+          (.mouseMove robot (+ frame-x 212) (+ frame-y 254))
+          (.mouseWheel robot 5)
+          #(deref handle-args)
+          => (receives-event-like
+               #(and (= (:type %) :mouse-wheel)
+                     (= (:direction %) :down))))
+
         (fact "gets a :key-pressed event when a key is pressed on the keyboard"
           (reset! handle-args ())
           (focus-frame)

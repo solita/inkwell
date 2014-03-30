@@ -77,11 +77,11 @@
   "Takes a fn that creates an Inkwell event, and returns a fn updates the
 sketch's state with the users's `handle-event`."
   [sketch f]
-  (fn []
+  (fn [& args]
     (when-not @(:paused? sketch)
       (binding [*out* (:main-thread-out sketch)]
         (try
-          (let [event (f)
+          (let [event (apply f args)
                 handle-event (-> sketch :settings :handle-event)]
             (swap! (:state sketch) handle-event event))
           (catch Throwable t
@@ -89,7 +89,9 @@ sketch's state with the users's `handle-event`."
             (reset! (:paused? sketch) true)))))))
 
 (defmacro event-adapter [sketch & body]
-  `(event-adapter* ~sketch (fn [] ~@body)))
+  `(event-adapter* ~sketch ~(if (vector? (first body))
+                              `(fn ~@body)
+                              `(fn [] ~@body))))
 
 (t/ann make-sketch! (All [State]
                       [(Settings State) -> (InkwellSketch State)]))
@@ -120,6 +122,9 @@ sketch's state with the users's `handle-event`."
                                                  :button (quil.core/mouse-button)
                                                  :position [(quil.core/mouse-x)
                                                             (quil.core/mouse-y)]})
+                              :mouse-wheel (event-adapter sketch [amount]
+                                             {:type :mouse-wheel
+                                              :direction (if (neg? amount) :up :down)})
                               :key-pressed (event-adapter sketch
                                              {:type :key-pressed
                                               :key (quil.core/raw-key)

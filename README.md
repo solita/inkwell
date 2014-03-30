@@ -75,8 +75,12 @@ The event parameter of `handle-event` may take one of the following values:
      :key-code (quil.core/key-code)
      :key-name (quil.core/key-as-keyword)}
 
-As you can see, apart from `:tick`, the event types correspond to Quil's event
-type callbacks, and their values come from Quil's state lookup functions.
+    {:type :mouse-wheel
+     :direction <:up/:down>}
+
+As you can see, for the most part, the event types correspond to Quil's event
+type callbacks, and their values come directly from Quil's state lookup
+functions.
 
 ## License
 
