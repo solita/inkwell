@@ -82,6 +82,13 @@ method is used to check that actual coordinates are within the right ballpark of
 the expected coordinates."
   (< (Math/abs (- b a)) 25))
 
+(defn receives-event-like [event-predicate]
+  (becomes-like
+    (fn [actual]
+      (some (fn [[_ event]]
+              (event-predicate event))
+            actual))))
+
 (facts "The event handler"
   (let [handle-return-value (atom 0)
         handle-args (atom ())]
@@ -106,27 +113,21 @@ the expected coordinates."
           (focus-frame)
           (.mouseMove robot (+ frame-x 212) (+ frame-y 254))
           #(deref handle-args)
-          => (becomes-like
-               (fn [actual]
-                 (some (fn [[_ event]]
-                         (and (= (:type event) :mouse-moved)
-                              (window-coordinate= 212 (get-in event [:position 0]))
-                              (window-coordinate= 254 (get-in event [:position 1]))))
-                       actual))))
+          => (receives-event-like
+               #(and (= (:type %) :mouse-moved)
+                     (window-coordinate= 212 (get-in % [:position 0]))
+                     (window-coordinate= 254 (get-in % [:position 1])))))
 
         (fact "gets a :mouse-pressed event when a mouse button is pressed"
           (reset! handle-args ())
           (.mouseMove robot (+ frame-x 212) (+ frame-y 254))
           (.mousePress robot InputEvent/BUTTON1_MASK)
           #(deref handle-args)
-          => (becomes-like
-               (fn [actual]
-                 (some (fn [[_ event]]
-                         (and (= (:type event) :mouse-pressed)
-                              (= (:button :left))
-                              (window-coordinate= 212 (get-in event [:position 0]))
-                              (window-coordinate= 254 (get-in event [:position 1]))))
-                       actual))))
+          => (receives-event-like
+               #(and (= (:type %) :mouse-pressed)
+                     (= (:button %) :left)
+                     (window-coordinate= 212 (get-in % [:position 0]))
+                     (window-coordinate= 254 (get-in % [:position 1])))))
 
         (fact "gets a :mouse-released event when a mouse button is released"
           (reset! handle-args ())
@@ -134,27 +135,21 @@ the expected coordinates."
           (.mousePress robot InputEvent/BUTTON3_MASK)
           (.mouseRelease robot InputEvent/BUTTON3_MASK)
           #(deref handle-args)
-          => (becomes-like
-               (fn [actual]
-                 (some (fn [[_ event]]
-                         (and (= (:type event) :mouse-released)
-                              (= (:button :right))
-                              (window-coordinate= 212 (get-in event [:position 0]))
-                              (window-coordinate= 254 (get-in event [:position 1]))))
-                       actual))))
+          => (receives-event-like
+               #(and (= (:type %) :mouse-released)
+                     (= (:button %) :right)
+                     (window-coordinate= 212 (get-in % [:position 0]))
+                     (window-coordinate= 254 (get-in % [:position 1])))))
 
         (fact "gets a :key-pressed event when a key is pressed on the keyboard"
           (reset! handle-args ())
           (focus-frame)
           (.keyPress robot KeyEvent/VK_C)
           #(deref handle-args)
-          => (becomes-like
-               (fn [actual]
-                 (some (fn [[_ event]]
-                         (and (= (:type event) :key-pressed)
-                              (= (:key event) \c)
-                              (= (:key-code event) KeyEvent/VK_C)))
-                       actual)))
+          => (receives-event-like
+               #(and (= (:type %) :key-pressed)
+                     (= (:key %) \c)
+                     (= (:key-code %) KeyEvent/VK_C)))
           (.keyRelease robot KeyEvent/VK_C))
 
         (fact "gets a :key-released event when a key is released on the keyboard"
@@ -163,13 +158,10 @@ the expected coordinates."
           (.keyPress robot KeyEvent/VK_C)
           (.keyRelease robot KeyEvent/VK_C)
           #(deref handle-args)
-          => (becomes-like
-               (fn [actual]
-                 (some (fn [[_ event]]
-                         (and (= (:type event) :key-released)
-                              (= (:key event) \c)
-                              (= (:key-code event) KeyEvent/VK_C)))
-                       actual))))
+          => (receives-event-like
+               #(and (= (:type %) :key-released)
+                     (= (:key %) \c)
+                     (= (:key-code %) KeyEvent/VK_C))))
 
         (fact "its return value becomes the new state value"
           #(deref (:state s)) => (becomes #(deref handle-return-value)))))))
