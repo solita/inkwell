@@ -52,31 +52,37 @@ The event parameter of `handle-event` may take one of the following values:
     {:type :tick} ; Sent after each `draw`
 
     {:type :mouse-moved
-     :position [(quil.core/mouse-x)
-                (quil.core/mouse-y)]}
+     :position [123 ; mouse x
+                456 ; mouse y
+    ]}
 
     {:type :mouse-pressed
-     :button (quil.core/mouse-button)
-     :position [(quil.core/mouse-x)
-                (quil.core/mouse-y)]}
+     :button :left  ; or :center or :right
+     :position [123 ; mouse x
+                456 ; mouse y
+    ]}
 
     {:type :mouse-released
-     :button (quil.core/mouse-button)
-     :position [(quil.core/mouse-x)
-                (quil.core/mouse-y)]}
+     :button :left  ; or :center or :right
+     :position [123 ; mouse x
+                456 ; mouse y
+    ]}
 
     {:type :key-pressed
-     :key (quil.core/raw-key)
-     :key-code (quil.core/key-code)
-     :key-name (quil.core/key-as-keyword)}
+     :key \c      ; from quil.core/raw-key
+     :key-code 67 ; from quil.core/key-code
+     :key-name :c ; from quil.core/key-as-keyword
+    }
 
     {:type :key-released
-     :key (quil.core/raw-key)
-     :key-code (quil.core/key-code)
-     :key-name (quil.core/key-as-keyword)}
+     :key \c      ; from quil.core/raw-key
+     :key-code 67 ; from quil.core/key-code
+     :key-name :c ; from quil.core/key-as-keyword
+    }
 
     {:type :mouse-wheel
-     :direction <:up/:down>}
+     :direction :up ; or :down
+    }
 
 As you can see, for the most part, the event types correspond to Quil's event
 type callbacks, and their values come directly from Quil's state lookup
