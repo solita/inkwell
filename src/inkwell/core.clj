@@ -37,6 +37,8 @@
 (t/def-alias MouseReleasedEvent (HMap :mandatory {:type ':mouse-released
                                                   :position Position
                                                   :button MouseButton}))
+(t/def-alias MouseWheelEvent (HMap :mandatory {:type ':mouse-wheel
+                                               :direction (U ':up ':down)}))
 (t/def-alias KeyPressedEvent (HMap :mandatory {:type ':key-pressed
                                                :key Character
                                                :key-code t/AnyInteger
@@ -49,6 +51,7 @@
                       MouseMovedEvent
                       MousePressedEvent
                       MouseReleasedEvent
+                      MouseWheelEvent
                       KeyPressedEvent
                       KeyReleasedEvent))
 
@@ -72,7 +75,7 @@
                                                   :settings (Settings State)})))
 
 (t/ann event-adapter* (All [State]
-                        [(InkwellSketchMap State) [-> Event] -> [-> Any]]))
+                        [(InkwellSketchMap State) [Any * -> Event] -> [Any * -> Any]]))
 (defn event-adapter*
   "Takes a fn that creates an Inkwell event, and returns a fn updates the
 sketch's state with the users's `handle-event`."
@@ -90,8 +93,8 @@ sketch's state with the users's `handle-event`."
 
 (defmacro event-adapter [sketch & body]
   `(event-adapter* ~sketch ~(if (vector? (first body))
-                              `(fn ~@body)
-                              `(fn [] ~@body))))
+                              `(fn [& ~(first body)] ~@body)
+                              `(fn [& _#] ~@body))))
 
 (t/ann make-sketch! (All [State]
                       [(Settings State) -> (InkwellSketch State)]))
@@ -123,6 +126,7 @@ sketch's state with the users's `handle-event`."
                                                  :position [(quil.core/mouse-x)
                                                             (quil.core/mouse-y)]})
                               :mouse-wheel (event-adapter sketch [amount]
+                                             (assert (number? amount))
                                              {:type :mouse-wheel
                                               :direction (if (neg? amount) :up :down)})
                               :key-pressed (event-adapter sketch
