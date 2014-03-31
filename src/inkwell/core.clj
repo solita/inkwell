@@ -77,7 +77,7 @@
 (t/ann event-adapter* (All [State]
                         [(InkwellSketchMap State) [Any * -> Event] -> [Any * -> Any]]))
 (defn event-adapter*
-  "Takes a fn that creates an Inkwell event, and returns a fn updates the
+  "Takes a fn that creates an Inkwell event, and returns a fn that updates the
 sketch's state with the users's `handle-event`."
   [sketch f]
   (fn [& args]
@@ -155,6 +155,5 @@ sketch's state with the users's `handle-event`."
 (t/ann resume! (All [State [x :< (InkwellSketch State)]]
                  [x -> x]))
 (defn resume! [sketch]
-  (reset! (:paused? sketch) false)
   (reset! (:paused? sketch) false)
   sketch)
