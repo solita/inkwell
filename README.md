@@ -38,10 +38,10 @@ Leiningen dependency information:
     [inkwell "0.1.0"]
 
 To create a sketch, call `inkwell.core/make-sketch!` with a map of settings.
-There are three keys in the settings map that Inkwell cares about,
-`handle-event` and `draw`, whose values must be functions as described above,
-and `initial-state`, whose value must be the sketch's initial state (the value
-first passed to `handle-event` and `draw`).
+There are three keys in the settings map that Inkwell cares about:
+`:handle-event` and `:draw`, whose values must be functions as described above,
+and `:initial-state`, whose value must be the sketch's initial state (the value
+first passed to the `:handle-event` and `:draw` functions).
 
 The rest of the keys, such as `:title` or `:size`, are passed on to Quil.
 
