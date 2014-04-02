@@ -115,6 +115,10 @@ sketch's state with the users's `handle-event`."
                                              {:type :mouse-moved
                                               :position [(quil.core/mouse-x)
                                                          (quil.core/mouse-y)]})
+                              :mouse-dragged (event-adapter sketch
+                                               {:type :mouse-moved
+                                                :position [(quil.core/mouse-x)
+                                                           (quil.core/mouse-y)]})
                               :mouse-pressed (event-adapter sketch
                                                {:type :mouse-pressed
                                                 :button (quil.core/mouse-button)
